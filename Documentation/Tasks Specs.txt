@@ -1,0 +1,51 @@
+*****************************************************************************************
+
+-> File Handling Module Requirements:
+
+1) Function that converts the data file content to an array of DES_DataType.
+
+input: file path ( string )
+
+output : vector<DES_DataType>
+
+2) Function that converts the key file into a DES_KeyType.
+
+input: file path : string
+
+output:  Key : DES_KeyType
+
+3) Function that converts an array of DES_DataType into a string to be written to a file
+
+input: file_path (string) , vector<DES_DataType>
+
+output: None
+
+
+*****************************************************************************************
+-> Data Path Requirements:
+
+
+1) Implement all Data Blocks
+
+
+2) Function that performs a Single Round on a Data unit
+
+inputs: Data (DES_DataType) - Key (DES_KeyType) - round number
+
+output: Encrypted Data by one round (DES_DataType)
+
+
+*****************************************************************************************
+Key Path Requirements:
+
+1) Function that performs permuted choice 1 on a key
+
+input: DES_KeyType
+
+output : DES_KeyType (or you can modify the original value using pass by reference)
+
+2) Function that performs Circular shift and Permuted Choice 2 on a key.
+
+input: DES_KeyType , round number
+
+output: DES_KeyType (must return a key)
