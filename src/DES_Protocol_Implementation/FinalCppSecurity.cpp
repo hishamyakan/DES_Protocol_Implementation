@@ -14,6 +14,8 @@
 #include "DES_DataTypes.h"
 #include "DES_KeyTypes.h"
 
+#include "DataHandler.h"
+
 #define PRINT_BINARY(DATA,SIZE) { \
 		for(int i = (SIZE)-1 ; i>= 0 ; i--){ \
 			\
@@ -52,16 +54,24 @@ int main(void) {
 //
 
 
-		DES_KeyType key;
-		key.value_64 = ~0 ;
-		key.value_56.value = 0;
-		key.value_48.value = ~0 ;
-		PRINT_BINARY(key.value_64, 64);
+//		DES_KeyType key;
+//		key.value_64 = ~0 ;
+//		key.value_56.value = 0;
+//		key.value_48.value = ~0 ;
+//		PRINT_BINARY(key.value_64, 64);
+//
+//
+//		key.value_64 = 0 ;
+//		key.values_28.upper = ~0 ;
+//		PRINT_BINARY(key.value_64, 64);
+
+	uint64 plainText = 0xFFFFFFFFFFFFFFFF;
+	uint64  permPlainText = 0x0000000000000000;
+	DataHandler::initialPermutation(plainText, permPlainText);
+	PRINT_BINARY(permPlainText,64);
 
 
-		key.value_64 = 0 ;
-		key.values_28.upper = ~0 ;
-		PRINT_BINARY(key.value_64, 64);
+
 
 	return EXIT_SUCCESS;
 }
