@@ -13,6 +13,7 @@
 #include "DES_KeyTypes.h"
 
 
+
 //#define WRITE_BIT(bitNum , permPlainText ,  value) permPlainText |= ( (uint64)value <<bitNum )
 #define READ_BIT(bitNum ,PlainText) ((PlainText)&((uint64)1<<bitNum))?1:0
 
@@ -25,6 +26,12 @@ inline void WRITE_BIT_48(uint8 bitNum , uint48 &permPlainText ,  uint8 value){
 
 	 permPlainText.value |= ((uint64)value<<bitNum);
 }
+
+inline void WRITE_BIT_32(uint8 bitNum , uint32 &permPlainText ,  uint8 value){
+
+	 permPlainText |= ((uint64)value<<bitNum);
+}
+
 
 
 const uint8 initialpermutationTable[64] =
@@ -91,6 +98,12 @@ const uint8 sboxTable[8][4][16] = {
 	  4,  10, 8, 13, 15, 12, 9,  0,  3,  5, 6, 11 }
 };
 
+// Straight Permutation Table
+const int permutation[32]
+        = { 16, 7, 20, 21, 29, 12, 28, 17, 1,  15, 23,
+            26, 5, 18, 31, 10, 2,  8,  24, 14, 32, 27,
+            3,  9, 19, 13, 30, 6,  22, 11, 4,  25 };
+
 class DataHandler {
 
 private:
@@ -116,8 +129,15 @@ public:
 
 	static void expansionPermutation(DES_Data &permPlainText , uint48 &EP_48);
 
-	static void sbox(DES_SBox_Input& input, DES_SBox_Output& output);
 	static void xorDataKey(uint48& EP_48, DES_KeyType& k, uint48& output);
+
+	static void sbox(DES_SBox_Input& input, DES_SBox_Output& output);
+
+	static void Permutation(DES_SBox_Output& output , uint32 &P_32);
+
+	static void xorLeftPerm(uint32 &P_32, DES_Data &permPlainText, uint32 &output);
+
+
 
 
 

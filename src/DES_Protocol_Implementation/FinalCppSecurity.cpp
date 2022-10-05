@@ -53,20 +53,27 @@ using namespace std;
 int main(void){
 
 
-	DES_Data plainText2;
-	plainText2.value_64= 0xF0F0E0E0C0C0A0A0;
-			//0b0000001000000010000000100000001000000000000000000000000000000000;
-
-
-	DES_Data  permPlainText2;
-	permPlainText2.value_64= 0;
-
-	DataHandler::initialPermutation(plainText2, permPlainText2);
-	PRINT_BINARY(permPlainText2.value_64,32);
-
+//	DES_Data plainText2;
+//	plainText2.value_64= 0xF0F0E0E0C0C0A0A0;
+//			//0b0000001000000010000000100000001000000000000000000000000000000000;
+//
+//
+//	DES_Data  permPlainText2;
+//	permPlainText2.value_64= 0;
+//
+//	DataHandler::initialPermutation(plainText2, permPlainText2);
+//	PRINT_BINARY(permPlainText2.value_64,32);
+//
+//	uint48 EP_48;
+//	EP_48.value = 0;
+//	DataHandler::expansionPermutation(permPlainText2, EP_48);
+//	PRINT_BINARY(EP_48.value,48);
 	uint48 EP_48;
-	EP_48.value = 0;
-	DataHandler::expansionPermutation(permPlainText2, EP_48);
+	EP_48.value = 0xDFFF0000FFF0;
+	DES_KeyType k;
+	k.value_48.value = 0x0000FFFF0000;
+
+	DataHandler::xorDataKey(EP_48, k, EP_48);
 	PRINT_BINARY(EP_48.value,48);
 
 
