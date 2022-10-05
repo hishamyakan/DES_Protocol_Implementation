@@ -9,30 +9,9 @@
 #define DATAHANDLER_H_
 
 #include "std_types.h"
-
-#include <iostream>
-
-#include <stdio.h>
-#include <stdlib.h>
-
 #include "DES_DataTypes.h"
 #include "DES_KeyTypes.h"
 
-
-
-using namespace std;
-
-
-
-
-#define PRINT_BINARY(DATA,SIZE) { \
-		for(int i = (SIZE)-1 ; i>= 0 ; i--){ \
-			\
-			printf("%d" , ((DATA)&((uint64)1<<i))?1:0); \
-			\
-		}\
-		puts("\n") ;\
-}\
 
 //#define WRITE_BIT(bitNum , permPlainText ,  value) permPlainText |= ( (uint64)value <<bitNum )
 #define READ_BIT(bitNum ,PlainText) ((PlainText)&((uint64)1<<bitNum))?1:0
@@ -41,6 +20,12 @@ inline void WRITE_BIT(uint8 bitNum , uint64 &permPlainText ,  uint8 value){
 
 	 permPlainText |= ((uint64)value<<bitNum);
 }
+
+inline void WRITE_BIT_48(uint8 bitNum , uint48 &permPlainText ,  uint8 value){
+
+	 permPlainText.value |= ((uint64)value<<bitNum);
+}
+
 
 const uint8 initialpermutationTable[64] =
 				{
@@ -52,12 +37,18 @@ const uint8 initialpermutationTable[64] =
 	            5,  63, 55, 47, 39, 31, 23, 15, 7
 				};
 
+// Expansion D-box Table
+
+const uint8 expansion_D_BOX[48]
+      = { 32, 1,  2,  3,  4,  5,  4,  5,  6,  7,  8,  9,
+          8,  9,  10, 11, 12, 13, 12, 13, 14, 15, 16, 17,
+          16, 17, 18, 19, 20, 21, 20, 21, 22, 23, 24, 25,
+          24, 25, 26, 27, 28, 29, 28, 29, 30, 31, 32, 1 };
 
 
 class DataHandler {
 
 private:
-
 
 
 	DataHandler();
@@ -67,7 +58,26 @@ private:
 
 public:
 
+
+	/*
+	 * Function: initialPermutation
+	 *
+	 *
+	 *
+	 * */
 	static void initialPermutation(uint64 &plainText , uint64 & permPlainText);
+
+	static void initialPermutation(DES_Data &plainText , DES_Data & permPlainText);
+
+	static void expansionPermutation(DES_Data &permPlainText , uint48 &EP_48);
+
+
+
+
+
+	//Note :No Need for the round number
+	static DES_Data dataHandleRound(DES_Data &plainText,DES_KeyType &roundKey);
+
 
 
 };

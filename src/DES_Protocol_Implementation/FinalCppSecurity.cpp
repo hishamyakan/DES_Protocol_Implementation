@@ -32,6 +32,59 @@ using namespace std;
 		puts("\n") ;\
 }\
 
+#define y 0
+#ifdef y
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+int main(void){
+
+
+	DES_Data plainText2;
+	plainText2.value_64= 0xF0F0E0E0C0C0A0A0;
+			//0b0000001000000010000000100000001000000000000000000000000000000000;
+
+
+	DES_Data  permPlainText2;
+	permPlainText2.value_64= 0;
+
+	DataHandler::initialPermutation(plainText2, permPlainText2);
+	PRINT_BINARY(permPlainText2.value_64,32);
+
+	uint48 EP_48;
+	EP_48.value = 0;
+	DataHandler::expansionPermutation(permPlainText2, EP_48);
+	PRINT_BINARY(EP_48.value,48);
+
+
+	return 0;
+}
+#endif
+
+
+
+
+
+
+
+
+
+
+
+#ifdef x
 
 int main(void) {
 
@@ -75,9 +128,11 @@ int main(void) {
 
 
 	uint64 plainText1 = 0x202020200000000;
-	uint64 plainText2 = 0b0000001000000010000000100000001000000000000000000000000000000000;
+	DES_Data plainText2;
+	plainText2.value_64= 0b0000001000000010000000100000001000000000000000000000000000000000;
 
-	uint64 plainText3 = 0x40404040;
+	DES_Data plainText3;
+	plainText3.value_64 = 0x40404040;
 //	uint64 plainText2 = 0b0000\
 //						  0010\
 //						  0000\
@@ -95,8 +150,10 @@ int main(void) {
 //						  1000\
 //						  0000;
 	//PRINT_BINARY(plainText,64);
-	uint64  permPlainText2 = 0;
-	uint64  permPlainText3 = 0;
+	DES_Data  permPlainText2;
+	permPlainText2.value_64= 0;
+	DES_Data  permPlainText3;
+	permPlainText3.value_64= 0;
 
 
 
@@ -111,11 +168,13 @@ int main(void) {
 //	PRINT_BINARY(READ_BIT(1, plainText),1);
 
 	DataHandler::initialPermutation(plainText2, permPlainText2);
-	PRINT_BINARY(permPlainText2,64);
+	PRINT_BINARY(permPlainText2.value_64,64);
 	DataHandler::initialPermutation(plainText3, permPlainText3);
-	PRINT_BINARY(permPlainText3,64);
+	PRINT_BINARY(permPlainText3.value_64,64);
 
 
 
 	return EXIT_SUCCESS;
 }
+
+#endif
