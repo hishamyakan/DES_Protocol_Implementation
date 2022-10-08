@@ -89,6 +89,10 @@ DES_Data DataHandler::dataHandleRound(DES_Data &plainText, DES_KeyType &roundKey
 
 	initialPermutation(plainText, permPlainText);
 
+	// for final perm
+	DES_Data finalPermInput;
+	finalPermInput.values_32.upper = permPlainText.values_32.lower;
+
 	//Step 2
 	 uint48 EP_48;
 	 EP_48.value = 0;
@@ -115,8 +119,9 @@ DES_Data DataHandler::dataHandleRound(DES_Data &plainText, DES_KeyType &roundKey
 	xorLeftPerm(P_32, permPlainText, P_32);
 
 	//Step 7
+	finalPermInput.values_32.lower = P_32;
 
-
+	finalPermutation(finalPermInput, result);
 
 
 
@@ -180,4 +185,14 @@ void DataHandler::sbox(DES_SBox_Input& input, DES_SBox_Output& output) {
 	row_i = row_index[input.values_6.S7 & ~middle_4_bit_mask];
 	//cout << row_i << " " << col_i << " " << (int)sboxTable[7][row_i][col_i] << endl;
 	output.values_4.S7 = sboxTable[7][row_i][col_i];
+}
+
+void DataHandler::finalPermutation(DES_Data& input, DES_Data& output) {
+	for (int i = 0; i < 64; i++) {
+		WRITE_BIT(
+			i,
+			output.value_64,
+			READ_BIT((final_perm[i] - 1), input.value_64)
+		);
+	}
 }
