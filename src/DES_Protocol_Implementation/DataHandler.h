@@ -17,6 +17,7 @@
 //#define WRITE_BIT(bitNum , permPlainText ,  value) permPlainText |= ( (uint64)value <<bitNum )
 #define READ_BIT(bitNum ,PlainText) ((PlainText)&((uint64)1<<bitNum))?1:0
 
+
 inline void WRITE_BIT(uint8 bitNum , uint64 &permPlainText ,  uint8 value){
 
 	 permPlainText |= ((uint64)value<<bitNum);
@@ -123,20 +124,6 @@ private:
 	~DataHandler();
 	DataHandler(const DataHandler &other) = delete;
 
-
-public:
-
-
-	/*
-	 * Function: initialPermutation
-	 *
-	 *
-	 *
-	 * */
-	static void initialPermutation(uint64 &plainText , uint64 & permPlainText);
-
-	static void initialPermutation(DES_Data &plainText , DES_Data & permPlainText);
-
 	static void expansionPermutation(DES_Data &permPlainText , uint48 &EP_48);
 
 	static void xorDataKey(uint48& EP_48, DES_KeyType& k, uint48& output);
@@ -147,12 +134,25 @@ public:
 
 	static void xorLeftPerm(uint32 &P_32, DES_Data &permPlainText, uint32 &output);
 
+
+public:
+
+
+	/*
+	 * Function: initialPermutation
+	 *
+	 *
+	 *
+	 * */
+	//static void initialPermutation(uint64 &plainText , uint64 & permPlainText);
+
+	static void initialPermutation(DES_Data &plainText , DES_Data & permPlainText);
+
 	static void finalPermutation(DES_Data& input, DES_Data& output);
 
 
-
 	//Note :No Need for the round number
-	static DES_Data dataHandleRound(DES_Data &plainText,DES_KeyType &roundKey);
+	static void dataHandleRound(DES_Data &permPlainText,DES_KeyType &roundKey , DES_Data &res);
 
 
 
