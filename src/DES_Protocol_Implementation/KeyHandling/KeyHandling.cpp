@@ -8,6 +8,10 @@
  *
  *******************************************************************************/
 #include"KeyHandling.h"
+
+/*to store 56 bit keyvalue from shift operation for the next round*/
+DES_KeyType keyparamaterized;
+
 /********************************************************************************
 * Function Description :
 * Input : Reference to key to fill in it value of 56 bit value variable (key56)
@@ -37,4 +41,58 @@ void KEY_PC1(DES_KeyType* key)
 		WRITE_BIT_56( 55 - i,&key56, value);
 	}
     key->value_56.value = key56.value;
+}
+
+DES_KeyType keyparamaterized;
+
+uint48 KEY_permutedchoice2(uint56 keyvalue)
+{
+	uint8 i = 1;
+	uint8 posvalue = 0; //value of given position
+	uint48 key48;
+	key48.value = (uint64)0;
+	for (i; i <= 48; i++)
+	{
+		posvalue = READ_BIT(keyvalue.value, 56 - permutedchoice2table[i - 1]);
+		WRITE_BIT_48(key48.value, 48 - i, posvalue);
+	}
+
+	return key48;
+}
+
+
+uint56 KEY_leftcircularshift(uint56 keyvalue, uint8 round)
+{
+	DES_KeyType keyvar;
+	keyvar.value_56 = keyvalue;
+	LCS(keyvar.values_28.upper, leftshiftschedule[round - 1]);
+	LCS(keyvar.values_28.lower, leftshiftschedule[round - 1]);
+
+	return keyvar.value_56;
+}
+
+
+DES_KeyType KEY_generation(DES_KeyType* keyvalue, uint8 round)
+{
+	if (round == 1)
+	{
+		KEY_PC1(keyvalue);
+
+		keyvalue->value_56 = KEY_leftcircularshift(keyvalue->value_56, round);
+		keyparamaterized.value_56 = keyvalue->value_56;
+
+		keyvalue->value_48 = KEY_permutedchoice2(keyvalue->value_56);
+
+
+	}
+	else
+	{
+		keyvalue->value_56 = KEY_leftcircularshift(keyparamaterized.value_56, round);
+		keyparamaterized.value_56 = keyvalue->value_56;
+
+		keyvalue->value_48 = KEY_permutedchoice2(keyvalue->value_56);
+
+	}
+
+	return *keyvalue;
 }
