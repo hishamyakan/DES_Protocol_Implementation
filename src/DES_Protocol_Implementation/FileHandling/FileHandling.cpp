@@ -11,6 +11,7 @@
 #include <fstream>
 
 static char GetDecimal(char c);
+char outputsize = 0;
 /********************************************************************************
 * Function Description :
 * Input : 1. Reference to key to fill in it value of key read from file (output)
@@ -66,8 +67,60 @@ void DES_InputDataHandling(DES_DataType Blocks[], char DataFileName[], uint32* s
         shifts++;
     }
     *size = cnt+1;
+    outputsize = *size;
     fclose(f);
 }
+
+/********************************************************************************
+* Function Description :
+* Input : 1. Reference to Data Blocks
+*         2. Filename containing the txt file to write to
+*         3. Char array to store the result of conversion of each block value to hex
+* Description : open the file , Read each block value as characters and convert
+* to hex character and store each character in an array then write this array
+* to the output file
+**********************************************************************************/
+void DES_OutputDataHandling(DES_DataType Blocks[], char DataFileName[], char writeData[])
+{
+    FILE* f;
+    uint64 quotient, remainder;
+    int i = (outputsize * 16), j = outputsize - 1;
+
+    writeData[i--] = '\0';
+
+    fopen_s(&f, DataFileName, "w");
+    while (j >= 0) //data array size
+    {
+        quotient = Blocks[j--].data.value_64;
+
+        while (quotient != 0)
+        {
+            remainder = quotient % 16;
+
+            if (remainder < 10) {
+                writeData[i--] = 48 + (char)remainder;
+            }
+            else
+            {
+                writeData[i--] = 55 + (char)remainder;
+            }
+            quotient = quotient / 16;
+        }
+    }
+
+    while (writeData[++i] != '\0')
+    {
+        fprintf(f, "%c", writeData[i]);
+    }
+
+    fclose(f);
+
+}
+
+
+
+
+
 /********************************************************************************
 * Function Description :
 * Input : character (hexadecimal digit)to convert to numeric value

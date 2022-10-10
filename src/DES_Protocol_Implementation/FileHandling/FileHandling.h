@@ -33,4 +33,15 @@ void DES_InputKeyHandling(DES_KeyType* key, char KeyFileName[]);
 **********************************************************************************/
 void DES_InputDataHandling(DES_DataType Blocks[], char DataFileName[], uint32* size);
 
+/********************************************************************************
+* Function Description :
+* Input : 1. Reference to Data Blocks 
+*         2. Filename containing the txt file to write to
+*         3. Char array to store the result of conversion of each block value to hex
+* Description : open the file , Read each block value as characters and convert
+* to hex character and store each character in an array then write this array
+* to the output file
+**********************************************************************************/
+void DES_OutputDataHandling(DES_DataType Blocks[], char DataFileName[], char writeData[]);
+
 #endif /* FILEHANDLING_H_ */
