@@ -36,18 +36,18 @@ DataHandler::~DataHandler() {
 //}
 
 
-void DataHandler::initialPermutation(DES_Data &plainText , DES_Data & permPlainText){
+//void DataHandler::initialPermutation(DES_Data &plainText , DES_Data & permPlainText){
+//
+//	for(int i = 0; i< 64; i++){
+//     WRITE_BIT(
+//    		 63-i,
+//    		 permPlainText.value_64,
+//    		 READ_BIT((63-( initialpermutationTable[i]-1)),plainText.value_64)
+//			 );
+//	}
+//}
 
-	for(int i = 0; i< 64; i++){
-     WRITE_BIT(
-    		 63-i,
-    		 permPlainText.value_64,
-    		 READ_BIT((63-( initialpermutationTable[i]-1)),plainText.value_64)
-			 );
-	}
-}
-
-void DataHandler::expansionPermutation(DES_Data &permPlainText, uint48 &EP_48) {
+void DataHandler::expansionPermutation(const DES_Data &permPlainText, uint48 &EP_48) {
 	for(int i = 0; i< 48; i++){
      WRITE_BIT_48(
     		 47-i,
@@ -74,12 +74,12 @@ void DataHandler::Permutation(DES_SBox_Output &output, uint32 &P_32) {
 
 }
 
-void DataHandler::xorLeftPerm(uint32 &P_32, DES_Data &permPlainText, uint32 &output)
+void DataHandler::xorLeftPerm(uint32 &P_32, const DES_Data &permPlainText, uint32 &output)
 {
 	output =  (P_32)^(permPlainText.values_32.upper);
 }
 
-void DataHandler::dataHandleRound(DES_Data &permPlainText, DES_KeyType &roundKey, DES_Data &res) {
+void DataHandler::dataHandleRound(const DES_Data &permPlainText, DES_KeyType &roundKey, DES_Data &res) {
 
 
 
@@ -178,12 +178,12 @@ void DataHandler::sbox(DES_SBox_Input& input, DES_SBox_Output& output) {
 	output.values_4.S7 = sboxTable[0][row_i][col_i];
 }
 
-void DataHandler::finalPermutation(DES_Data& input, DES_Data& output) {
-	for (int i = 0; i < 64; i++) {
-		WRITE_BIT(
-			63-i,
-			output.value_64,
-			READ_BIT((63-(final_perm[i] - 1)), input.value_64)
-		);
-	}
-}
+//void DataHandler::finalPermutation(DES_Data& input, DES_Data& output) {
+//	for (int i = 0; i < 64; i++) {
+//		WRITE_BIT(
+//			63-i,
+//			output.value_64,
+//			READ_BIT((63-(final_perm[i] - 1)), input.value_64)
+//		);
+//	}
+//}

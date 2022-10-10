@@ -35,6 +35,8 @@ inline void WRITE_BIT_32(uint8 bitNum , uint32 &permPlainText ,  uint8 value){
 
 
 
+
+
 const uint8 initialpermutationTable[64] =
 				{
 				58, 50, 42, 34, 26, 18, 10, 2,  60, 52, 44,
@@ -44,6 +46,18 @@ const uint8 initialpermutationTable[64] =
 	            27, 19, 11, 3,  61, 53, 45, 37, 29, 21, 13,
 	            5,  63, 55, 47, 39, 31, 23, 15, 7
 				};
+
+inline void initialPermutation(DES_Data &plainText , DES_Data & permPlainText){
+
+	for(int i = 0; i< 64; i++){
+     WRITE_BIT(
+    		 63-i,
+    		 permPlainText.value_64,
+    		 READ_BIT((63-( initialpermutationTable[i]-1)),plainText.value_64)
+			 );
+	}
+}
+
 
 // Expansion D-box Table
 
@@ -115,6 +129,16 @@ const int final_perm[64]
 	26, 33, 1,  41, 9,  49, 17, 57, 25 };
 
 
+inline void finalPermutation(DES_Data& input, DES_Data& output) {
+	for (int i = 0; i < 64; i++) {
+		WRITE_BIT(
+			63-i,
+			output.value_64,
+			READ_BIT((63-(final_perm[i] - 1)), input.value_64)
+		);
+	}
+}
+
 class DataHandler {
 
 private:
@@ -124,7 +148,7 @@ private:
 	~DataHandler();
 	DataHandler(const DataHandler &other) = delete;
 
-	static void expansionPermutation(DES_Data &permPlainText , uint48 &EP_48);
+	static void expansionPermutation(const DES_Data &permPlainText , uint48 &EP_48);
 
 	static void xorDataKey(uint48& EP_48, DES_KeyType& k, uint48& output);
 
@@ -132,7 +156,7 @@ private:
 
 	static void Permutation(DES_SBox_Output& output , uint32 &P_32);
 
-	static void xorLeftPerm(uint32 &P_32, DES_Data &permPlainText, uint32 &output);
+	static void xorLeftPerm(uint32 &P_32,const DES_Data &permPlainText, uint32 &output);
 
 
 public:
@@ -146,13 +170,13 @@ public:
 	 * */
 	//static void initialPermutation(uint64 &plainText , uint64 & permPlainText);
 
-	static void initialPermutation(DES_Data &plainText , DES_Data & permPlainText);
+	//static void initialPermutation(DES_Data &plainText , DES_Data & permPlainText);
 
-	static void finalPermutation(DES_Data& input, DES_Data& output);
+	//static void finalPermutation(DES_Data& input, DES_Data& output);
 
 
 	//Note :No Need for the round number
-	static void dataHandleRound(DES_Data &permPlainText,DES_KeyType &roundKey , DES_Data &res);
+	static void dataHandleRound(const DES_Data &permPlainText,DES_KeyType &roundKey , DES_Data &res);
 
 
 

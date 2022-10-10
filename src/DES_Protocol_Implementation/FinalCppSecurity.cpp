@@ -80,41 +80,129 @@ int main(void){
 	DES_Data plainText;
 	plainText.value_64 = 0x123456ABCD132536;
 
+
 	DES_Data  permPlainText;
 	permPlainText.value_64 = 0x0;
 
 
-	DataHandler::initialPermutation(plainText, permPlainText);
+	initialPermutation(plainText, permPlainText);
 	cout<<"After Initial Perm: ";
 	cout<<hex<<uppercase<<permPlainText.value_64<<endl;
 
-
 	DES_Data res;
+	cout<<"Round 1 : ";
+
 	DataHandler::dataHandleRound(permPlainText, k,res);
 	cout<<hex<<uppercase<<res.values_32.upper<<" ";
 	cout<<hex<<uppercase<<res.values_32.lower<<endl;
 
-	k.value_64 = 0x0;
+	cout<<"Round 2 : ";
+
+	k.value_48.value = 0x0;
 	k.value_48.value = 0x4568581ABCCE;
 	permPlainText.value_64 = 0x0;
+	DataHandler::dataHandleRound(res, k,permPlainText);
+	cout<<hex<<uppercase<<permPlainText.values_32.upper<<" ";
+	cout<<hex<<uppercase<<permPlainText.values_32.lower<<endl;
+
+
 	DES_Data res2;
-	DataHandler::dataHandleRound(res, k,res2);
-	cout<<hex<<uppercase<<res2.values_32.upper<<" ";
-	cout<<hex<<uppercase<<res2.values_32.lower<<endl;
+	res2.value_64 = 0x0;
+	res2.values_32.lower = permPlainText.values_32.upper;
+	res2.values_32.upper = permPlainText.values_32.lower;
+	cout<<hex<<uppercase<<permPlainText.values_32.upper<<" "<<permPlainText.values_32.lower<<endl;
+	DES_Data res3;
+	res3.value_64 = 0x0;
+	finalPermutation(res2, res3);
+
+	//cout<<hex<<uppercase<<res3.values_32.upper<<" "<<res3.values_32.lower<<endl;
+
+	//Decrypt
+
+	cout<<"Dec"<<endl;
+	DES_Data d1,d2 , d3 ,d4 ,d5;
+	DES_KeyType DK;
+	DK.value_48.value = 0x4568581ABCCE;
+	initialPermutation(res3,d1);
 
 
-	k.value_64 = 0x0;
-	res.value_64 = 0x0;
-
-	k.value_48.value = 0x06EDA4ACF5B5;
 
 
+	cout<<hex<<uppercase<<d1.values_32.upper<<" "<<d1.values_32.lower<<endl;
 
-	DataHandler::dataHandleRound(res2, k,res);
-	cout<<hex<<uppercase<<res.values_32.upper<<" ";
-	cout<<hex<<uppercase<<res.values_32.lower<<endl;
+	cout<<"Round 1 Dec ";
+	DataHandler::dataHandleRound(d1, DK,d2);
+	cout<<hex<<uppercase<<d2.values_32.upper<<" ";
+	cout<<hex<<uppercase<<d2.values_32.lower<<endl;
+
+	cout<<"Round 2 Dec ";
+
+	DK.value_48.value = 0x0;
+	DK.value_48.value = 0x194CD072DE8C;
+	DataHandler::dataHandleRound(d2, DK,d3);
+	cout<<hex<<uppercase<<d3.values_32.upper<<" ";
+	cout<<hex<<uppercase<<d3.values_32.lower<<endl;
 
 
+	d4.values_32.upper = d3.values_32.lower;
+	d4.values_32.lower = d3.values_32.upper;
+
+
+	cout<<"Result: ";
+	cout<<hex<<uppercase<<d4.value_64<<endl;
+
+	d5.value_64 =0x0;
+	finalPermutation(d4, d5);
+	cout<<hex<<uppercase<<d5.value_64<<endl;
+
+
+
+
+
+
+
+
+
+
+
+
+
+//	k.value_64 = 0x0;
+//	k.value_48.value = 0x4568581ABCCE;
+//	permPlainText.value_64 = 0x0;
+//	DES_Data res2;
+//	DataHandler::dataHandleRound(res, k,res2);
+//	cout<<hex<<uppercase<<res2.values_32.upper<<" ";
+//	cout<<hex<<uppercase<<res2.values_32.lower<<endl;
+//
+//
+//	k.value_64 = 0x0;
+//	res.value_64 = 0x0;
+//
+//	k.value_48.value = 0x06EDA4ACF5B5;
+//
+//
+//
+//	DataHandler::dataHandleRound(res2, k,res);
+//	cout<<hex<<uppercase<<res.values_32.upper<<" ";
+//	cout<<hex<<uppercase<<res.values_32.lower<<endl;
+//
+//
+//
+//
+//	DES_Data reverse;
+//
+//	k.value_64 = 0x0;
+//	//res.value_64 = 0x0;
+//	k.value_48.value = 0x4568581ABCCE;
+//
+//
+//	cout<<"Reverse\n";
+//	reverse.value_64 = 0x0;
+//	DataHandler::dataHandleRound(res,k, reverse);
+//	cout<<hex<<uppercase<<reverse.values_32.upper<<" ";
+//	cout<<hex<<uppercase<<reverse.values_32.lower<<endl;
+//
 
 
 //	PRINT_BINARY(permPlainText.values_32.lower, 32);
