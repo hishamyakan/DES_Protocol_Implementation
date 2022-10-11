@@ -9,13 +9,12 @@
  */
 
 #include <iostream>
-
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <fstream>
 #include "DES_DataTypes.h"
 #include "DES_KeyTypes.h"
-
+#include "KeyHandling.h"
 #include "DataHandler.h"
 
 using namespace std;
@@ -33,58 +32,208 @@ using namespace std;
 }\
 
 #define y 0
-#ifdef y
 
 
+#define N 16
+
+/*Boolean value to check whether all keys were generated or not*/
+bool keyGenerated = false;
+
+/*Array of input keys to their respective rounds*/
+DES_KeyType InputKeys[16] = {0};
+
+/*Enum that represents the type of operation to be performed*/
+typedef enum{
+
+	ENCRYPT , DECRYPT
+
+}DES_OpType;
+
+/*Description:
+ * Generates all input keys to their respective rounds and stores
+ * their values inside the global array InputKeys[]*/
+void generateKeys(DES_KeyType &key){
+
+	DES_KeyType first_key = key;
+
+	/*Step 1 : Permutation Choice 1*/
+
+	KEY_PC1(first_key);
+
+	cout<<"Key After PC1:";
+	cout<<hex<<uppercase<<first_key.value_64<<endl;
+
+	/*Step 2 : Circular Shift Left + Permutation Choice 2*/
+	for(int i = 1 ; i <= 16 ; i++){
+
+		DES_KeyType nextKey , roundKey;
+
+		nextKey.value_64 = 0 ;
+		roundKey.value_64 = 0 ;
+
+		nextKey.value_56 = KEY_leftcircularshift(first_key.value_56, i);
+		roundKey.value_48 =KEY_permutedchoice2(nextKey.value_56);
+
+		InputKeys[i-1] = roundKey;
+
+		first_key = nextKey;
+
+		cout<<hex<<uppercase<<InputKeys[i-1].value_64<<endl;
+	}
+
+	/*Acknowledging that all input Keys Are generated*/
+	keyGenerated = true;
 
 
+}
+
+/*Description:
+ * Performs either DES encryption or decryption based on the passed operation type.
+ * It encrypts the given plainText and key and produces the result in the same variable data*/
+void PerformOperation(DES_DataType & data,DES_KeyType &key , DES_OpType type){
+
+	/*If input keys are not generated, generate them*/
+	if(!keyGenerated){
+		generateKeys(key);
+	}
+
+	DES_Data current = data.data  , temp ;
+
+	temp.value_64 = 0 ;
+
+	//Step 1 : Initial Permutation for Data and Permutation Choice 1 to the key
+
+	initialPermutation(current,temp);
 
 
+	cout<<"Data After Initial Permutation:";
+	cout<<hex<<uppercase<<temp.value_64<<endl;
 
 
+	//Step 2 : Perform Rounds
+
+	for(int i = 1 ; i <= N ; i++){
+
+		DES_Data output;
+		output.value_64 = 0 ;
+
+		DES_KeyType roundKey;
+		if(type == ENCRYPT){
+			roundKey = InputKeys[i-1];
+		}
+		else{
+			roundKey = InputKeys[16-i];
+		}
+
+		DataHandler::dataHandleRound(temp, roundKey, output);
+
+		cout<<"After Round "<<i<<":"<<endl;
+		cout<<"Data:";
+		cout<<hex<<uppercase<<output.value_64<<endl;
+		cout<<"Input Key:";
+		cout<<hex<<uppercase<<roundKey.value_64<<endl;
+
+		temp = output;
+	}
+
+	//Step 3 : 32 bit Swap
+
+	uint64 temporary = temp.values_32.lower ;
+	temp.values_32.lower = temp.values_32.upper;
+	temp.values_32.upper = temporary;
+
+	cout<<"Data After 32- Bit Swap: "<<hex<<uppercase<<temp.value_64<<endl;
+
+	//Step 4: Inverse Initial Permutation
+	current.value_64 = 0;
+	finalPermutation(temp, current);
+
+	cout<<"Data After Inverse Permutation: "<<hex<<uppercase<<current.value_64<<endl;
+	//Step 5: Modify final values:
+	data.data = current;
 
 
-
-
-
+}
 
 
 
 int main(void){
 
+	//	DES_KeyType k;
+	//	k.value_48.value = 0x194CD072DE8C;
+	//
+	string DataPath , KeyPath , OutputPath ;
 
-//	DES_Data plainText2;
-//	plainText2.value_64= 0xF0F0E0E0C0C0A0A0;
-//			//0b0000001000000010000000100000001000000000000000000000000000000000;
-//
-//
-//	DES_Data  permPlainText2;
-//	permPlainText2.value_64= 0;
-//
-//	DataHandler::initialPermutation(plainText2, permPlainText2);
-//	PRINT_BINARY(permPlainText2.value_64,32);
-//
-//	uint48 EP_48;
-//	EP_48.value = 0;
-//	DataHandler::expansionPermutation(permPlainText2, EP_48);
-//	PRINT_BINARY(EP_48.value,48);
-//	uint48 EP_48;
-//	EP_48.value = 0xDFFF0000FFF0;
-//	DES_KeyType k;
-//	k.value_48.value = 0x0000FFFF0000;
+	cout<<"Enter the path of the file containing the plainText content:"<<endl;
+
+	cin>>DataPath;
+
+	cout<<"Enter the path of the file containing the Key content:"<<endl;
+
+	cin>>KeyPath ;
+
+	cout<<"Enter the path of the file to hold the ciphertext content:"<<endl;
+
+	cin>>OutputPath ;
+
+	ifstream DataFile(DataPath) , KeyFile(KeyPath);
+
+	ofstream OutputFile(OutputPath);
+
+	DES_Data plainText  ;
+
+	plainText.value_64 = 0 ;
+
+	DES_KeyType key ;
+
+	KeyFile>>hex>>key.value_64;
+
+	cout<<"Key is "<<hex<<uppercase<<key.value_64<<endl;
+
+	while(DataFile>>hex>>plainText.value_64){
+
+		DES_DataType temp ;
+		temp.data = plainText;
+
+		PerformOperation(temp, key, ENCRYPT);
+
+		OutputFile<<hex<<uppercase<<temp.data.value_64<<" ";
+	}
 
 
-	DES_KeyType k;
-	k.value_48.value = 0x194CD072DE8C;
-
-	DES_Data plainText;
-	plainText.value_64 = 0x123456ABCD132536;
 
 
-	DES_Data  permPlainText;
-	permPlainText.value_64 = 0x0;
+	//	DES_Data plainText;
+	//	plainText.value_64 = 0x123456ABCD132536;
+	//
+	//
+	//	DES_Data  permPlainText;
+	//	permPlainText.value_64 = 0x0;
+	//
+	//
+	//	DES_DataType firstData ;
+	//	firstData.data.value_64 = plainText.value_64;
+	//	DES_KeyType firstKey ;
+	//	firstKey.value_64 = 0xAABB09182736CCDD;
 
+	//	encrypt(firstData, firstKey);
+	//
+	//	cout<<endl<<"CipherText: "<<hex<<uppercase<<firstData.data.value_64<<endl;
+	//	cout<<endl<<"Final Key: "<<hex<<uppercase<<firstKey.value_64<<endl;
+	//
+	//	encrypt(firstData,firstKey);
 
+	//	generateKeys(firstKey);
+
+	//	PerformOperation(firstData,firstKey, ENCRYPT);
+	//
+	//	cout<<endl<<"CipherText: "<<hex<<uppercase<<firstData.data.value_64<<endl;
+	//
+	//	PerformOperation(firstData,firstKey, DECRYPT);
+	//
+	//	cout<<endl<<"PlainText: "<<hex<<uppercase<<firstData.data.value_64<<endl;
+
+#ifdef back
 	initialPermutation(plainText, permPlainText);
 	cout<<"After Initial Perm: ";
 	cout<<hex<<uppercase<<permPlainText.value_64<<endl;
@@ -156,187 +305,89 @@ int main(void){
 	cout<<hex<<uppercase<<d5.value_64<<endl;
 
 
-
-
-
-
-
-
-
-
-
-
-
-//	k.value_64 = 0x0;
-//	k.value_48.value = 0x4568581ABCCE;
-//	permPlainText.value_64 = 0x0;
-//	DES_Data res2;
-//	DataHandler::dataHandleRound(res, k,res2);
-//	cout<<hex<<uppercase<<res2.values_32.upper<<" ";
-//	cout<<hex<<uppercase<<res2.values_32.lower<<endl;
-//
-//
-//	k.value_64 = 0x0;
-//	res.value_64 = 0x0;
-//
-//	k.value_48.value = 0x06EDA4ACF5B5;
-//
-//
-//
-//	DataHandler::dataHandleRound(res2, k,res);
-//	cout<<hex<<uppercase<<res.values_32.upper<<" ";
-//	cout<<hex<<uppercase<<res.values_32.lower<<endl;
-//
-//
-//
-//
-//	DES_Data reverse;
-//
-//	k.value_64 = 0x0;
-//	//res.value_64 = 0x0;
-//	k.value_48.value = 0x4568581ABCCE;
-//
-//
-//	cout<<"Reverse\n";
-//	reverse.value_64 = 0x0;
-//	DataHandler::dataHandleRound(res,k, reverse);
-//	cout<<hex<<uppercase<<reverse.values_32.upper<<" ";
-//	cout<<hex<<uppercase<<reverse.values_32.lower<<endl;
-//
-
-
-//	PRINT_BINARY(permPlainText.values_32.lower, 32);
-//	PRINT_BINARY(permPlainText.values_32.upper, 32);
-
-
-//	    DES_KeyType k;
-//		k.value_48.value = 0x4568581ABCCE;
-////		DES_Data plainText ;
-////		plainText.value_64 = 0x123456ABCD132536;
-//		DES_Data  permPlainText;
-//		permPlainText.value_64 = 0x18CA18AD5A78E394;
-//
-//	DES_Data permPlainText2 =DataHandler::dataHandleRound(permPlainText, k);
-//	cout<<hex<<uppercase<<permPlainText2.values_32.upper<<" ";
-//	cout<<hex<<uppercase<<permPlainText2.values_32.lower<<endl;
-
-//	PRINT_BINARY(permPlainText.values_32.lower, 32);
-//	PRINT_BINARY(permPlainText.values_32.upper, 32);
+#endif
 
 
 
 	return 0;
 }
-#endif
 
 
 
 
+#ifdef needed
+void encrypt(DES_DataType & data , DES_KeyType &key){
 
 
 
+	DES_Data current = data.data  , temp ;
+	DES_KeyType current_key = key , final_key;
+
+	final_key.value_64 = 0;
+	temp.value_64 = 0 ;
+
+	//Step 1 : Initial Permutation for Data and Permutation Choice 1 to the key
+
+	initialPermutation(current,temp);
+
+	KEY_PC1(current_key);
+	cout<<"Data After Initial Permutation:";
+	cout<<hex<<uppercase<<temp.value_64<<endl;
+	cout<<"Key After PC1:";
+	cout<<hex<<uppercase<<current_key.value_64<<endl;
 
 
+	//Step 2 : Perform Rounds
 
+	for(int i = 1 ; i <= N ; i++){
 
+		DES_KeyType nextKey , roundKey;
+		nextKey.value_64 = 0 ;
+		roundKey.value_64 = 0 ;
 
-#ifdef x
+		//Key for the next round
+		nextKey.value_56 = KEY_leftcircularshift(current_key.value_56, i);
+		//Input Key to the Data Block
+		roundKey.value_48 =KEY_permutedchoice2(nextKey.value_56);
 
-int main(void) {
+		DES_Data output;
+		output.value_64 = 0 ;
 
-//		DES_DataType number ;
-//
-//		number.data.value_64 = 0 ;
-//
-//		number.data.values_32.upper = ~0;
-//
-//
-//		PRINT_BINARY(number.data.value_64 , 64);
-//
-//
-//			number.input.value_48.value = ~0;
-//			number.input.values_6.S0 = 0 ;
-//			number.input.values_6.S7 = 0 ;
-//
-//		PRINT_BINARY(number.input.value_48.value , 48);
-//
-//
-//		number.output.value_32 = ~0;
-//		number.output.values_4.S0 = 0 ;
-//
-//		number.output.values_4.S7 = 0 ;
-//
-//		PRINT_BINARY(number.output.value_32 , 32);
-//
+		DataHandler::dataHandleRound(temp, roundKey, output);
 
+		cout<<"After Round "<<i<<":"<<endl;
+		cout<<"Data:";
+		cout<<hex<<uppercase<<output.value_64<<endl;
+		cout<<"Input Key:";
+		cout<<hex<<uppercase<<roundKey.value_64<<endl;
 
-//		DES_KeyType key;
-//		key.value_64 = ~0 ;
-//		key.value_56.value = 0;
-//		key.value_48.value = ~0 ;
-//		PRINT_BINARY(key.value_64, 64);
-//
-//
-//		key.value_64 = 0 ;
-//		key.values_28.upper = ~0 ;
-//		PRINT_BINARY(key.value_64, 64);
+		current_key = nextKey;
+		temp = output;
+		if(i == 16){
+			final_key = roundKey;
+		}
+	}
 
+	//Step 3 : 32 bit Swap
 
+	uint64 temporary = temp.values_32.lower ;
+	temp.values_32.lower = temp.values_32.upper;
+	temp.values_32.upper = temporary;
 
-	uint64 plainText1 = 0x202020200000000;
-	DES_Data plainText2;
-	plainText2.value_64= 0b0000001000000010000000100000001000000000000000000000000000000000;
+	cout<<"Data After 32- Bit Swap: "<<hex<<uppercase<<temp.value_64<<endl;
 
-	DES_Data plainText3;
-	plainText3.value_64 = 0x40404040;
-//	uint64 plainText2 = 0b0000\
-//						  0010\
-//						  0000\
-//						  0010\
-//						  0000\
-//						  0010\
-//						  0000\
-//						  0010\
-//						  1000\
-//						  0000\
-//						  1000\
-//						  0000\
-//						  1000\
-//						  0000\
-//						  1000\
-//						  0000;
-	//PRINT_BINARY(plainText,64);
-	DES_Data  permPlainText2;
-	permPlainText2.value_64= 0;
-	DES_Data  permPlainText3;
-	permPlainText3.value_64= 0;
+	//Step 4: Inverse Initial Permutation
+	current.value_64 = 0;
+	finalPermutation(temp, current);
 
+	cout<<"Data After Inverse Permutation: "<<hex<<uppercase<<current.value_64<<endl;
+	//Step 5: Modify final values:
+	data.data = current;
+	key = current_key;
 
-
-
-	DES_Data trial;
-	trial.value_64 = 0b0001001000110100010101101010101111001101000100110010010100110110;
-
-	DES_Data res;
-	DataHandler::initialPermutation(trial, res);
-	cout<<res.value_64<<endl;
-	PRINT_BINARY(res.value_64,64);
-
-//	WRITE_BIT(0,permPlainText,READ_BIT(4,plainText));
-//	WRITE_BIT(50,permPlainText,READ_BIT(2,plainText));
-
-
-
-//	PRINT_BINARY(READ_BIT(1, plainText),1);
-
-//	DataHandler::initialPermutation(plainText2, permPlainText2);
-//	PRINT_BINARY(permPlainText2.value_64,64);
-//	DataHandler::initialPermutation(plainText3, permPlainText3);
-//	PRINT_BINARY(permPlainText3.value_64,64);
-
-
-
-	return EXIT_SUCCESS;
 }
-
 #endif
+
+
+
+

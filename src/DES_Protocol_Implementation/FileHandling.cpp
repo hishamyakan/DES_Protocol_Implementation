@@ -20,6 +20,10 @@ char outputsize = 0;
 * to number then concatenate each 16 digit in one 64 Bit variable (var) then assign
 * the 64 bit value to the key
 **********************************************************************************/
+//1) Hexadecimal or ascii
+
+//2) Padding (left or right)
+
 void DES_InputKeyHandling(DES_KeyType* key, char KeyFileName[])
 {
     FILE *f;
