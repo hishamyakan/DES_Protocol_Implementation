@@ -10,7 +10,7 @@
 #include"KeyHandling.h"
 
 /* Write Bit value in 48 Bits key */
-#define WRITE_BIT_48(KEY,POS,VALUE) (KEY = (KEY&~((uint64)1<<POS)) | ((uint64)VALUE<<POS))
+#define KEY_WRITE_BIT_48(KEY,POS,VALUE) (KEY = (KEY&~((uint64)1<<POS)) | ((uint64)VALUE<<POS))
 
 /*to store 56 bit keyvalue from shift operation for the next round*/
 DES_KeyType keyparamaterized;
@@ -71,7 +71,7 @@ uint48 KEY_permutedchoice2(uint56 keyvalue)
 	for (i; i <= 48; i++)
 	{
 		posvalue = READ_BIT2(keyvalue.value, 56 - permutedchoice2table[i - 1]);
-		WRITE_BIT_48(key48.value, 48 - i, posvalue);
+		KEY_WRITE_BIT_48(key48.value, 48 - i, posvalue);
 	}
 
 	return key48;

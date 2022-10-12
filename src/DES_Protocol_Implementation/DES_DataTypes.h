@@ -81,17 +81,25 @@ typedef union{
 }DES_SBox_Output;
 
 
-typedef struct DES_DataType{
+typedef struct{
+
+	uint8 lower : 4;
+	uint8 upper : 4;
+
+}uint4_2;
+
+typedef union DES_DataType{
 
 	DES_Data data; /*64-bit value or 2 32-bit values*/
+	uint4_2 array[8];
 
-	/*AND*/
-
-	DES_SBox_Input input; /*48-bit value or 8 6-bit values*/
-
-	/*AND*/
-
-	DES_SBox_Output output;  /*32-bit value or 8 4-bit values*/
+//	/*AND*/
+//
+//	DES_SBox_Input input; /*48-bit value or 8 6-bit values*/
+//
+//	/*AND*/
+//
+//	DES_SBox_Output output;  /*32-bit value or 8 4-bit values*/
 
 }DES_DataType;
 

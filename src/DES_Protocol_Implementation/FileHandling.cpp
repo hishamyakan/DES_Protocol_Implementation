@@ -10,7 +10,7 @@
 #include "FileHandling.h"
 #include <fstream>
 
-static char GetDecimal(char c);
+char GetDecimal(char c);
 char outputsize = 0;
 /********************************************************************************
 * Function Description :
@@ -132,7 +132,7 @@ void DES_OutputDataHandling(DES_DataType Blocks[], char DataFileName[], char wri
                 from A:F corresponds to 65 : 70
                 from a:f corresponds to 97 : 102
 **********************************************************************************/
-static char GetDecimal(char c)
+char GetDecimal(char c)
 {
     /* 0 : 9 */
     if ((c >= 48) && (c <= 57 )) return c-48;

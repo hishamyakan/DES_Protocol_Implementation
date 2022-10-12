@@ -44,6 +44,7 @@ void DES_InputDataHandling(DES_DataType Blocks[], char DataFileName[], uint32* s
 **********************************************************************************/
 void DES_OutputDataHandling(DES_DataType Blocks[], char DataFileName[], char writeData[]);
 
+char GetDecimal(char c);
 
 
 #endif /* FILEHANDLING_H_ */
