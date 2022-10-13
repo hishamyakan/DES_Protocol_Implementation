@@ -3,7 +3,7 @@
 // Author      : 
 // Version     :
 // Copyright   : Your copyright notice
-// Description : Hello World in C++, Ansi-style
+// Description : DES Encryption in C++, Ansi-style
 //============================================================================
 
 #include <iostream>
@@ -199,59 +199,57 @@ const uint8 initialpermutationTable[64] =
 		5,  63, 55, 47, 39, 31, 23, 15, 7
 };
 
-
 // Expansion D-box Table
+const uint8 expansion_D_BOX[48] = {
+	32, 1,  2,  3,  4,  5,  4,  5,  6,  7,  8,  9,
+	8,  9,  10, 11, 12, 13, 12, 13, 14, 15, 16, 17,
+	16, 17, 18, 19, 20, 21, 20, 21, 22, 23, 24, 25,
+	24, 25, 26, 27, 28, 29, 28, 29, 30, 31, 32, 1
+};
 
-const uint8 expansion_D_BOX[48]
-							= { 32, 1,  2,  3,  4,  5,  4,  5,  6,  7,  8,  9,
-									8,  9,  10, 11, 12, 13, 12, 13, 14, 15, 16, 17,
-									16, 17, 18, 19, 20, 21, 20, 21, 22, 23, 24, 25,
-									24, 25, 26, 27, 28, 29, 28, 29, 30, 31, 32, 1 };
-/*
- * 8 Boxes, 4 Rows, 16 Column
- */
+/* 8 Boxes, 4 Rows, 16 Column */
 const uint8 sboxTable[8][4][16] = {
-		{ 14, 4,  13, 1, 2,  15, 11, 8,  3,  10, 6,  12, 5,
-				9,  0,  7,  0, 15, 7,  4,  14, 2,  13, 1,  10, 6,
-				12, 11, 9,  5, 3,  8,  4,  1,  14, 8,  13, 6,  2,
-				11, 15, 12, 9, 7,  3,  10, 5,  0,  15, 12, 8,  2,
-				4,  9,  1,  7, 5,  11, 3,  14, 10, 0,  6,  13 },
-				{ 15, 1,  8,  14, 6,  11, 3, 4,  9,  7,  2,  13, 12,
-						0,  5,  10, 3,  13, 4,  7, 15, 2,  8,  14, 12, 0,
-						1,  10, 6,  9,  11, 5,  0, 14, 7,  11, 10, 4,  13,
-						1,  5,  8,  12, 6,  9,  3, 2,  15, 13, 8,  10, 1,
-						3,  15, 4,  2,  11, 6,  7, 12, 0,  5,  14, 9 },
-						{ 10, 0,  9,  14, 6,  3,  15, 5,  1,  13, 12,
-								7,  11, 4,  2,  8,  13, 7,  0,  9,  3,  4,
-								6,  10, 2,  8,  5,  14, 12, 11, 15, 1,  13,
-								6,  4,  9,  8,  15, 3,  0,  11, 1,  2,  12,
-								5,  10, 14, 7,  1,  10, 13, 0,  6,  9,  8,
-								7,  4,  15, 14, 3,  11, 5,  2,  12 },
-								{ 7,  13, 14, 3,  0,  6,  9,  10, 1,  2, 8,  5,  11,
-										12, 4,  15, 13, 8,  11, 5,  6,  15, 0, 3,  4,  7,
-										2,  12, 1,  10, 14, 9,  10, 6,  9,  0, 12, 11, 7,
-										13, 15, 1,  3,  14, 5,  2,  8,  4,  3, 15, 0,  6,
-										10, 1,  13, 8,  9,  4,  5,  11, 12, 7, 2,  14 },
-										{ 2,  12, 4, 1,  7,  10, 11, 6, 8,  5,  3,  15, 13,
-												0,  14, 9, 14, 11, 2,  12, 4, 7,  13, 1,  5,  0,
-												15, 10, 3, 9,  8,  6,  4,  2, 1,  11, 10, 13, 7,
-												8,  15, 9, 12, 5,  6,  3,  0, 14, 11, 8,  12, 7,
-												1,  14, 2, 13, 6,  15, 0,  9, 10, 4,  5,  3 },
-												{ 12, 1,  10, 15, 9,  2,  6,  8,  0,  13, 3, 4, 14,
-														7,  5,  11, 10, 15, 4,  2,  7,  12, 9,  5, 6, 1,
-														13, 14, 0,  11, 3,  8,  9,  14, 15, 5,  2, 8, 12,
-														3,  7,  0,  4,  10, 1,  13, 11, 6,  4,  3, 2, 12,
-														9,  5,  15, 10, 11, 14, 1,  7,  6,  0,  8, 13 },
-														{ 4,  11, 2,  14, 15, 0,  8, 13, 3,  12, 9,  7,  5,
-																10, 6,  1,  13, 0,  11, 7, 4,  9,  1,  10, 14, 3,
-																5,  12, 2,  15, 8,  6,  1, 4,  11, 13, 12, 3,  7,
-																14, 10, 15, 6,  8,  0,  5, 9,  2,  6,  11, 13, 8,
-																1,  4,  10, 7,  9,  5,  0, 15, 14, 2,  3,  12 },
-																{ 13, 2,  8, 4,  6,  15, 11, 1,  10, 9, 3, 14, 5,
-																		0,  12, 7, 1,  15, 13, 8,  10, 3,  7, 4, 12, 5,
-																		6,  11, 0, 14, 9,  2,  7,  11, 4,  1, 9, 12, 14,
-																		2,  0,  6, 10, 13, 15, 3,  5,  8,  2, 1, 14, 7,
-																		4,  10, 8, 13, 15, 12, 9,  0,  3,  5, 6, 11 }
+	{ 14, 4,  13, 1, 2,  15, 11, 8,  3,  10, 6,  12, 5,
+	  9,  0,  7,  0, 15, 7,  4,  14, 2,  13, 1,  10, 6,
+	  12, 11, 9,  5, 3,  8,  4,  1,  14, 8,  13, 6,  2,
+	  11, 15, 12, 9, 7,  3,  10, 5,  0,  15, 12, 8,  2,
+	  4,  9,  1,  7, 5,  11, 3,  14, 10, 0,  6,  13 },
+	{ 15, 1,  8,  14, 6,  11, 3, 4,  9,  7,  2,  13, 12,
+	  0,  5,  10, 3,  13, 4,  7, 15, 2,  8,  14, 12, 0,
+	  1,  10, 6,  9,  11, 5,  0, 14, 7,  11, 10, 4,  13,
+	  1,  5,  8,  12, 6,  9,  3, 2,  15, 13, 8,  10, 1,
+	  3,  15, 4,  2,  11, 6,  7, 12, 0,  5,  14, 9 },
+	{ 10, 0,  9,  14, 6,  3,  15, 5,  1,  13, 12,
+	  7,  11, 4,  2,  8,  13, 7,  0,  9,  3,  4,
+	  6,  10, 2,  8,  5,  14, 12, 11, 15, 1,  13,
+	  6,  4,  9,  8,  15, 3,  0,  11, 1,  2,  12,
+	  5,  10, 14, 7,  1,  10, 13, 0,  6,  9,  8,
+	  7,  4,  15, 14, 3,  11, 5,  2,  12 },
+	{ 7,  13, 14, 3,  0,  6,  9,  10, 1,  2, 8,  5,  11,
+	  12, 4,  15, 13, 8,  11, 5,  6,  15, 0, 3,  4,  7,
+	  2,  12, 1,  10, 14, 9,  10, 6,  9,  0, 12, 11, 7,
+	  13, 15, 1,  3,  14, 5,  2,  8,  4,  3, 15, 0,  6,
+	  10, 1,  13, 8,  9,  4,  5,  11, 12, 7, 2,  14 },
+	{ 2,  12, 4, 1,  7,  10, 11, 6, 8,  5,  3,  15, 13,
+	  0,  14, 9, 14, 11, 2,  12, 4, 7,  13, 1,  5,  0,
+	  15, 10, 3, 9,  8,  6,  4,  2, 1,  11, 10, 13, 7,
+	  8,  15, 9, 12, 5,  6,  3,  0, 14, 11, 8,  12, 7,
+	  1,  14, 2, 13, 6,  15, 0,  9, 10, 4,  5,  3 },
+	{ 12, 1,  10, 15, 9,  2,  6,  8,  0,  13, 3, 4, 14,
+	  7,  5,  11, 10, 15, 4,  2,  7,  12, 9,  5, 6, 1,
+	  13, 14, 0,  11, 3,  8,  9,  14, 15, 5,  2, 8, 12,
+	  3,  7,  0,  4,  10, 1,  13, 11, 6,  4,  3, 2, 12,
+	  9,  5,  15, 10, 11, 14, 1,  7,  6,  0,  8, 13 },
+	{ 4,  11, 2,  14, 15, 0,  8, 13, 3,  12, 9,  7,  5,
+	  10, 6,  1,  13, 0,  11, 7, 4,  9,  1,  10, 14, 3,
+	  5,  12, 2,  15, 8,  6,  1, 4,  11, 13, 12, 3,  7,
+	  14, 10, 15, 6,  8,  0,  5, 9,  2,  6,  11, 13, 8,
+	  1,  4,  10, 7,  9,  5,  0, 15, 14, 2,  3,  12 },
+	{ 13, 2,  8, 4,  6,  15, 11, 1,  10, 9, 3, 14, 5,
+	  0,  12, 7, 1,  15, 13, 8,  10, 3,  7, 4, 12, 5,
+	  6,  11, 0, 14, 9,  2,  7,  11, 4,  1, 9, 12, 14,
+	  2,  0,  6, 10, 13, 15, 3,  5,  8,  2, 1, 14, 7,
+	  4,  10, 8, 13, 15, 12, 9,  0,  3,  5, 6, 11 }
 };
 
 // Straight Permutation Table
@@ -330,6 +328,7 @@ inline void finalPermutation(DES_Data& input, DES_Data& output) {
 
 /* Read Bit value in 64 Bits key */
 inline uint8 READ_BIT2(uint64 KEY, uint8 POS) {return ( KEY & ((uint64)1<<POS) )?1:0;}
+
 /* Write Bit value in 56 Bits key */
 inline void WRITE_BIT_56(uint8 bitNum, uint56* key,  uint8 value)
 {
@@ -338,6 +337,21 @@ inline void WRITE_BIT_56(uint8 bitNum, uint56* key,  uint8 value)
 	else
 		key->value &= ~((uint64)1<<bitNum);
 }
+
+inline int RowIndex(const uint64& value) {
+	switch (value)
+	{
+	case 33:
+		return 3;
+		break;
+	case 32:
+		return 2;
+	default:
+		return value;
+		break;
+	}
+}
+
 /*******************************************************************************
  *                               Data Functions                                *
  *******************************************************************************/
@@ -377,52 +391,51 @@ void xorLeftPerm(uint32 &P_32, const DES_Data &permPlainText, uint32 &output)
 
 void sbox(DES_SBox_Input& input, DES_SBox_Output& output) {
 
-	// a bit mask to extract the center and side bits
+	// a bit mask to extract the center and side bits 
 	int middle_4_bit_mask = 0b011110;
 
-	// since the output of the bit mask will be 6 bits for just the side bits
-	// 0b100001 => 0b11
-	map<int, int> row_index{ { 33, 3 }, { 32, 2 }, {1, 1}, {0, 0} };
+	// since the output of the bit mask will be 6 bits for just the side bits 
+	// 0b100001 => 0b11 
 
 	int col_i, row_i;
 	// Box 0
 	col_i = (input.values_6.S0 & middle_4_bit_mask) >> 1;
-	row_i = row_index[input.values_6.S0 & ~middle_4_bit_mask];
+	row_i = RowIndex(input.values_6.S0 & ~middle_4_bit_mask);
 	output.values_4.S0 = sboxTable[7][row_i][col_i];
 
 	// Box 1
 	col_i = (input.values_6.S1 & middle_4_bit_mask) >> 1;
-	row_i = row_index[input.values_6.S1 & ~middle_4_bit_mask];
+	row_i = RowIndex(input.values_6.S1 & ~middle_4_bit_mask);
 	output.values_4.S1 = sboxTable[6][row_i][col_i];
 
 	// Box 2
 	col_i = (input.values_6.S2 & middle_4_bit_mask) >> 1;
-	row_i = row_index[input.values_6.S2 & ~middle_4_bit_mask];
+	row_i = RowIndex(input.values_6.S2 & ~middle_4_bit_mask);
 	output.values_4.S2 = sboxTable[5][row_i][col_i];
 
 	// Box 3
 	col_i = (input.values_6.S3 & middle_4_bit_mask) >> 1;
-	row_i = row_index[input.values_6.S3 & ~middle_4_bit_mask];
+	row_i = RowIndex(input.values_6.S3 & ~middle_4_bit_mask);
 	output.values_4.S3 = sboxTable[4][row_i][col_i];
 
 	// Box 4
 	col_i = (input.values_6.S4 & middle_4_bit_mask) >> 1;
-	row_i = row_index[input.values_6.S4 & ~middle_4_bit_mask];
+	row_i = RowIndex(input.values_6.S4 & ~middle_4_bit_mask);
 	output.values_4.S4 = sboxTable[3][row_i][col_i];
 
 	// Box 5
 	col_i = (input.values_6.S5 & middle_4_bit_mask) >> 1;
-	row_i = row_index[input.values_6.S5 & ~middle_4_bit_mask];
+	row_i = RowIndex(input.values_6.S5 & ~middle_4_bit_mask);
 	output.values_4.S5 = sboxTable[2][row_i][col_i];
 
 	// Box 6
 	col_i = (input.values_6.S6 & middle_4_bit_mask) >> 1;
-	row_i = row_index[input.values_6.S6 & ~middle_4_bit_mask];
+	row_i = RowIndex(input.values_6.S6 & ~middle_4_bit_mask);
 	output.values_4.S6 = sboxTable[1][row_i][col_i];
 
 	// Box 7
 	col_i = (input.values_6.S7 & middle_4_bit_mask) >> 1;
-	row_i = row_index[input.values_6.S7 & ~middle_4_bit_mask];
+	row_i = RowIndex(input.values_6.S7 & ~middle_4_bit_mask);
 	output.values_4.S7 = sboxTable[0][row_i][col_i];
 }
 
