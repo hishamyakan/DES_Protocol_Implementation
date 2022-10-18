@@ -13,7 +13,7 @@ using namespace std;
 /*******************************************************************************
  *                                Definitions                                  *
  *******************************************************************************/
-/* Boolean Values */
+ /* Boolean Values */
 #ifndef FALSE
 #define FALSE       (0u)
 #endif
@@ -33,6 +33,8 @@ using namespace std;
 
 #define SIZE 56
 
+#define BUFFER_SIZE 		(1000u)
+
 #define LCS(KEY,NUM) ( KEY = (KEY<<NUM) | (KEY >> ((28-NUM))))
 
 #define KEY_WRITE_BIT_48(KEY,POS,VALUE) (KEY = (KEY&~((uint64)1<<POS)) | ((uint64)VALUE<<POS))
@@ -51,37 +53,37 @@ typedef signed long long      sint64;         /* -9223372036854775808 .. 9223372
 typedef float                 float32;
 typedef double                float64;
 
-typedef struct{
+typedef struct {
 
-	uint64 value : 48 ;
+	uint64 value : 48;
 	uint64 : 0;
 
 }uint48;
 
 
-typedef struct uint28_2{
+typedef struct uint28_2 {
 
-	uint64 lower : 28 ;
-	uint64 upper : 28 ;
-	uint64 : 0 ;
+	uint64 lower : 28;
+	uint64 upper : 28;
+	uint64 : 0;
 }uint28_2; /* Two 28-bit values (upper and lower)*/
 
 
-typedef struct{
+typedef struct {
 
-	uint64 value : 56 ;
+	uint64 value : 56;
 	uint64 : 0;
 
 }uint56; /*56-bit value*/
 
 
-typedef union DES_KeyType{
+typedef union DES_KeyType {
 
 	uint64 value_64; /*64-bit value*/
 
 	/*OR*/
 
-	uint56 value_56 ; /*56-bit value*/
+	uint56 value_56; /*56-bit value*/
 
 	/*OR*/
 
@@ -94,15 +96,15 @@ typedef union DES_KeyType{
 }DES_KeyType;
 
 
-typedef struct uint32_2{
+typedef struct uint32_2 {
 
-	uint64 lower : 32 ;
-	uint64 upper : 32 ;
+	uint64 lower : 32;
+	uint64 upper : 32;
 
 }uint32_2; /* Two 32-bit values (upper and lower)*/
 
 
-typedef union DES_Data{
+typedef union DES_Data {
 
 	uint64 value_64; /*64 bit value*/
 
@@ -114,7 +116,7 @@ typedef union DES_Data{
 
 
 
-typedef struct{
+typedef struct {
 
 	uint64 S0 : 6;
 	uint64 S1 : 6;
@@ -127,7 +129,7 @@ typedef struct{
 	uint64 : 0;
 }uint6_8; /*8 6-bit values*/
 
-typedef struct{
+typedef struct {
 
 	uint64 S0 : 4;
 	uint64 S1 : 4;
@@ -141,7 +143,7 @@ typedef struct{
 
 }uint4_8; /*8 4-bit values*/
 
-typedef union{
+typedef union {
 
 	uint48 value_48; /*48-bit value*/
 
@@ -151,7 +153,7 @@ typedef union{
 
 }DES_SBox_Input;
 
-typedef union{
+typedef union {
 
 	uint32 value_32; /*32_bit value*/
 
@@ -162,25 +164,26 @@ typedef union{
 }DES_SBox_Output;
 
 
-typedef struct{
+typedef struct {
 
 	uint8 lower : 4;
 	uint8 upper : 4;
 
 }uint4_2;
 
-typedef union DES_DataType{
+typedef union DES_DataType {
 
 	DES_Data data; /*64-bit value or 2 32-bit values*/
 	/*OR*/
 	uint4_2 array[8]; /*8 8-bit values with access to upper and lower half bytes*/
 
+	uint8 array2[8];
 }DES_DataType;
 
 /*Enum that represents the type of operation to be performed*/
-typedef enum{
+typedef enum {
 
-	ENCRYPT , DECRYPT
+	ENCRYPT, DECRYPT
 
 }DES_OpType;
 
@@ -199,71 +202,71 @@ const uint8 initialpermutationTable[64] =
 
 // Expansion D-box Table
 const uint8 expansion_D_BOX[48] = {
-	32, 1,  2,  3,  4,  5,  4,  5,  6,  7,  8,  9,
-	8,  9,  10, 11, 12, 13, 12, 13, 14, 15, 16, 17,
-	16, 17, 18, 19, 20, 21, 20, 21, 22, 23, 24, 25,
-	24, 25, 26, 27, 28, 29, 28, 29, 30, 31, 32, 1
+		32, 1,  2,  3,  4,  5,  4,  5,  6,  7,  8,  9,
+		8,  9,  10, 11, 12, 13, 12, 13, 14, 15, 16, 17,
+		16, 17, 18, 19, 20, 21, 20, 21, 22, 23, 24, 25,
+		24, 25, 26, 27, 28, 29, 28, 29, 30, 31, 32, 1
 };
 
 /* 8 Boxes, 4 Rows, 16 Column */
 const uint8 sboxTable[8][4][16] = {
-	{ 14, 4,  13, 1, 2,  15, 11, 8,  3,  10, 6,  12, 5,
-	  9,  0,  7,  0, 15, 7,  4,  14, 2,  13, 1,  10, 6,
-	  12, 11, 9,  5, 3,  8,  4,  1,  14, 8,  13, 6,  2,
-	  11, 15, 12, 9, 7,  3,  10, 5,  0,  15, 12, 8,  2,
-	  4,  9,  1,  7, 5,  11, 3,  14, 10, 0,  6,  13 },
-	{ 15, 1,  8,  14, 6,  11, 3, 4,  9,  7,  2,  13, 12,
-	  0,  5,  10, 3,  13, 4,  7, 15, 2,  8,  14, 12, 0,
-	  1,  10, 6,  9,  11, 5,  0, 14, 7,  11, 10, 4,  13,
-	  1,  5,  8,  12, 6,  9,  3, 2,  15, 13, 8,  10, 1,
-	  3,  15, 4,  2,  11, 6,  7, 12, 0,  5,  14, 9 },
-	{ 10, 0,  9,  14, 6,  3,  15, 5,  1,  13, 12,
-	  7,  11, 4,  2,  8,  13, 7,  0,  9,  3,  4,
-	  6,  10, 2,  8,  5,  14, 12, 11, 15, 1,  13,
-	  6,  4,  9,  8,  15, 3,  0,  11, 1,  2,  12,
-	  5,  10, 14, 7,  1,  10, 13, 0,  6,  9,  8,
-	  7,  4,  15, 14, 3,  11, 5,  2,  12 },
-	{ 7,  13, 14, 3,  0,  6,  9,  10, 1,  2, 8,  5,  11,
-	  12, 4,  15, 13, 8,  11, 5,  6,  15, 0, 3,  4,  7,
-	  2,  12, 1,  10, 14, 9,  10, 6,  9,  0, 12, 11, 7,
-	  13, 15, 1,  3,  14, 5,  2,  8,  4,  3, 15, 0,  6,
-	  10, 1,  13, 8,  9,  4,  5,  11, 12, 7, 2,  14 },
-	{ 2,  12, 4, 1,  7,  10, 11, 6, 8,  5,  3,  15, 13,
-	  0,  14, 9, 14, 11, 2,  12, 4, 7,  13, 1,  5,  0,
-	  15, 10, 3, 9,  8,  6,  4,  2, 1,  11, 10, 13, 7,
-	  8,  15, 9, 12, 5,  6,  3,  0, 14, 11, 8,  12, 7,
-	  1,  14, 2, 13, 6,  15, 0,  9, 10, 4,  5,  3 },
-	{ 12, 1,  10, 15, 9,  2,  6,  8,  0,  13, 3, 4, 14,
-	  7,  5,  11, 10, 15, 4,  2,  7,  12, 9,  5, 6, 1,
-	  13, 14, 0,  11, 3,  8,  9,  14, 15, 5,  2, 8, 12,
-	  3,  7,  0,  4,  10, 1,  13, 11, 6,  4,  3, 2, 12,
-	  9,  5,  15, 10, 11, 14, 1,  7,  6,  0,  8, 13 },
-	{ 4,  11, 2,  14, 15, 0,  8, 13, 3,  12, 9,  7,  5,
-	  10, 6,  1,  13, 0,  11, 7, 4,  9,  1,  10, 14, 3,
-	  5,  12, 2,  15, 8,  6,  1, 4,  11, 13, 12, 3,  7,
-	  14, 10, 15, 6,  8,  0,  5, 9,  2,  6,  11, 13, 8,
-	  1,  4,  10, 7,  9,  5,  0, 15, 14, 2,  3,  12 },
-	{ 13, 2,  8, 4,  6,  15, 11, 1,  10, 9, 3, 14, 5,
-	  0,  12, 7, 1,  15, 13, 8,  10, 3,  7, 4, 12, 5,
-	  6,  11, 0, 14, 9,  2,  7,  11, 4,  1, 9, 12, 14,
-	  2,  0,  6, 10, 13, 15, 3,  5,  8,  2, 1, 14, 7,
-	  4,  10, 8, 13, 15, 12, 9,  0,  3,  5, 6, 11 }
+		{ 14, 4,  13, 1, 2,  15, 11, 8,  3,  10, 6,  12, 5,
+				9,  0,  7,  0, 15, 7,  4,  14, 2,  13, 1,  10, 6,
+				12, 11, 9,  5, 3,  8,  4,  1,  14, 8,  13, 6,  2,
+				11, 15, 12, 9, 7,  3,  10, 5,  0,  15, 12, 8,  2,
+				4,  9,  1,  7, 5,  11, 3,  14, 10, 0,  6,  13 },
+				{ 15, 1,  8,  14, 6,  11, 3, 4,  9,  7,  2,  13, 12,
+						0,  5,  10, 3,  13, 4,  7, 15, 2,  8,  14, 12, 0,
+						1,  10, 6,  9,  11, 5,  0, 14, 7,  11, 10, 4,  13,
+						1,  5,  8,  12, 6,  9,  3, 2,  15, 13, 8,  10, 1,
+						3,  15, 4,  2,  11, 6,  7, 12, 0,  5,  14, 9 },
+						{ 10, 0,  9,  14, 6,  3,  15, 5,  1,  13, 12,
+								7,  11, 4,  2,  8,  13, 7,  0,  9,  3,  4,
+								6,  10, 2,  8,  5,  14, 12, 11, 15, 1,  13,
+								6,  4,  9,  8,  15, 3,  0,  11, 1,  2,  12,
+								5,  10, 14, 7,  1,  10, 13, 0,  6,  9,  8,
+								7,  4,  15, 14, 3,  11, 5,  2,  12 },
+								{ 7,  13, 14, 3,  0,  6,  9,  10, 1,  2, 8,  5,  11,
+										12, 4,  15, 13, 8,  11, 5,  6,  15, 0, 3,  4,  7,
+										2,  12, 1,  10, 14, 9,  10, 6,  9,  0, 12, 11, 7,
+										13, 15, 1,  3,  14, 5,  2,  8,  4,  3, 15, 0,  6,
+										10, 1,  13, 8,  9,  4,  5,  11, 12, 7, 2,  14 },
+										{ 2,  12, 4, 1,  7,  10, 11, 6, 8,  5,  3,  15, 13,
+												0,  14, 9, 14, 11, 2,  12, 4, 7,  13, 1,  5,  0,
+												15, 10, 3, 9,  8,  6,  4,  2, 1,  11, 10, 13, 7,
+												8,  15, 9, 12, 5,  6,  3,  0, 14, 11, 8,  12, 7,
+												1,  14, 2, 13, 6,  15, 0,  9, 10, 4,  5,  3 },
+												{ 12, 1,  10, 15, 9,  2,  6,  8,  0,  13, 3, 4, 14,
+														7,  5,  11, 10, 15, 4,  2,  7,  12, 9,  5, 6, 1,
+														13, 14, 0,  11, 3,  8,  9,  14, 15, 5,  2, 8, 12,
+														3,  7,  0,  4,  10, 1,  13, 11, 6,  4,  3, 2, 12,
+														9,  5,  15, 10, 11, 14, 1,  7,  6,  0,  8, 13 },
+														{ 4,  11, 2,  14, 15, 0,  8, 13, 3,  12, 9,  7,  5,
+																10, 6,  1,  13, 0,  11, 7, 4,  9,  1,  10, 14, 3,
+																5,  12, 2,  15, 8,  6,  1, 4,  11, 13, 12, 3,  7,
+																14, 10, 15, 6,  8,  0,  5, 9,  2,  6,  11, 13, 8,
+																1,  4,  10, 7,  9,  5,  0, 15, 14, 2,  3,  12 },
+																{ 13, 2,  8, 4,  6,  15, 11, 1,  10, 9, 3, 14, 5,
+																		0,  12, 7, 1,  15, 13, 8,  10, 3,  7, 4, 12, 5,
+																		6,  11, 0, 14, 9,  2,  7,  11, 4,  1, 9, 12, 14,
+																		2,  0,  6, 10, 13, 15, 3,  5,  8,  2, 1, 14, 7,
+																		4,  10, 8, 13, 15, 12, 9,  0,  3,  5, 6, 11 }
 };
 
 // Straight Permutation Table
 const int permutation[32]
-					  = { 16, 7, 20, 21, 29, 12, 28, 17, 1,  15, 23,
-							  26, 5, 18, 31, 10, 2,  8,  24, 14, 32, 27,
-							  3,  9, 19, 13, 30, 6,  22, 11, 4,  25 };
+= { 16, 7, 20, 21, 29, 12, 28, 17, 1,  15, 23,
+		26, 5, 18, 31, 10, 2,  8,  24, 14, 32, 27,
+		3,  9, 19, 13, 30, 6,  22, 11, 4,  25 };
 
 // Final Permutation Table
 const int final_perm[64]
-					 = { 40, 8,  48, 16, 56, 24, 64, 32, 39, 7,  47,
-							 15, 55, 23, 63, 31, 38, 6,  46, 14, 54, 22,
-							 62, 30, 37, 5,  45, 13, 53, 21, 61, 29, 36,
-							 4,  44, 12, 52, 20, 60, 28, 35, 3,  43, 11,
-							 51, 19, 59, 27, 34, 2,  42, 10, 50, 18, 58,
-							 26, 33, 1,  41, 9,  49, 17, 57, 25 };
+= { 40, 8,  48, 16, 56, 24, 64, 32, 39, 7,  47,
+		15, 55, 23, 63, 31, 38, 6,  46, 14, 54, 22,
+		62, 30, 37, 5,  45, 13, 53, 21, 61, 29, 36,
+		4,  44, 12, 52, 20, 60, 28, 35, 3,  43, 11,
+		51, 19, 59, 27, 34, 2,  42, 10, 50, 18, 58,
+		26, 33, 1,  41, 9,  49, 17, 57, 25 };
 
 const uint8 permutedchoice2table[48]{
 	14,17,11,24,1,5,3,28,
@@ -283,33 +286,38 @@ const uint8 leftshiftschedule[16]{
 bool keyGenerated = false;
 
 /*Array of input keys to their respective rounds*/
-DES_KeyType InputKeys[16] = {0};
+DES_KeyType InputKeys[16] = { 0 };
+
+/*Buffer*/
+DES_DataType buffer[BUFFER_SIZE];
+
+uint32 current_buffer_size = 0;
 
 /*******************************************************************************
  *                              Inline Functions                               *
  *******************************************************************************/
-inline void WRITE_BIT(uint8 bitNum , uint64 &permPlainText ,  uint8 value){
+inline void WRITE_BIT(uint8 bitNum, uint64& permPlainText, uint8 value) {
 
-	permPlainText |= ((uint64)value<<bitNum);
+	permPlainText |= ((uint64)value << bitNum);
 }
 
-inline void WRITE_BIT_48(uint8 bitNum , uint48 &permPlainText ,  uint8 value){
+inline void WRITE_BIT_48(uint8 bitNum, uint48& permPlainText, uint8 value) {
 
-	permPlainText.value |= ((uint64)value<<bitNum);
+	permPlainText.value |= ((uint64)value << bitNum);
 }
 
-inline void WRITE_BIT_32(uint8 bitNum , uint32 &permPlainText ,  uint8 value){
+inline void WRITE_BIT_32(uint8 bitNum, uint32& permPlainText, uint8 value) {
 
-	permPlainText |= ((uint64)value<<bitNum);
+	permPlainText |= ((uint64)value << bitNum);
 }
 
-inline void initialPermutation(DES_Data &plainText , DES_Data & permPlainText){
+inline void initialPermutation(DES_Data& plainText, DES_Data& permPlainText) {
 
-	for(int i = 0; i< 64; i++){
+	for (int i = 0; i < 64; i++) {
 		WRITE_BIT(
-				63-i,
-				permPlainText.value_64,
-				READ_BIT((63-( initialpermutationTable[i]-1)),plainText.value_64)
+			63 - i,
+			permPlainText.value_64,
+			READ_BIT((63 - (initialpermutationTable[i] - 1)), plainText.value_64)
 		);
 	}
 }
@@ -317,23 +325,23 @@ inline void initialPermutation(DES_Data &plainText , DES_Data & permPlainText){
 inline void finalPermutation(DES_Data& input, DES_Data& output) {
 	for (int i = 0; i < 64; i++) {
 		WRITE_BIT(
-				63-i,
-				output.value_64,
-				READ_BIT((63-(final_perm[i] - 1)), input.value_64)
+			63 - i,
+			output.value_64,
+			READ_BIT((63 - (final_perm[i] - 1)), input.value_64)
 		);
 	}
 }
 
 /* Read Bit value in 64 Bits key */
-inline uint8 READ_BIT2(uint64 KEY, uint8 POS) {return ( KEY & ((uint64)1<<POS) )?1:0;}
+inline uint8 READ_BIT2(uint64 KEY, uint8 POS) { return (KEY & ((uint64)1 << POS)) ? 1 : 0; }
 
 /* Write Bit value in 56 Bits key */
-inline void WRITE_BIT_56(uint8 bitNum, uint56* key,  uint8 value)
+inline void WRITE_BIT_56(uint8 bitNum, uint56* key, uint8 value)
 {
-	if(value == STD_HIGH)
-		key->value |= ((uint64)1<<bitNum);
+	if (value == STD_HIGH)
+		key->value |= ((uint64)1 << bitNum);
 	else
-		key->value &= ~((uint64)1<<bitNum);
+		key->value &= ~((uint64)1 << bitNum);
 }
 
 inline int RowIndex(const uint64& value) {
@@ -354,12 +362,12 @@ inline int RowIndex(const uint64& value) {
  *                               Data Functions                                *
  *******************************************************************************/
 
-void expansionPermutation(const DES_Data &permPlainText, uint48 &EP_48) {
-	for(int i = 0; i< 48; i++){
+void expansionPermutation(const DES_Data& permPlainText, uint48& EP_48) {
+	for (int i = 0; i < 48; i++) {
 		WRITE_BIT_48(
-				47-i,
-				EP_48,
-				READ_BIT((31-( expansion_D_BOX[i]-1)),permPlainText.values_32.lower)
+			47 - i,
+			EP_48,
+			READ_BIT((31 - (expansion_D_BOX[i] - 1)), permPlainText.values_32.lower)
 		);
 	}
 
@@ -367,33 +375,33 @@ void expansionPermutation(const DES_Data &permPlainText, uint48 &EP_48) {
 
 void xorDataKey(uint48& EP_48, DES_KeyType& k, uint48& output)
 {
-	output.value =  (EP_48.value)^(k.value_48.value);
+	output.value = (EP_48.value) ^ (k.value_48.value);
 }
 
-void Permutation(DES_SBox_Output &output, uint32 &P_32) {
-	for(int i = 0; i< 32; i++){
+void Permutation(DES_SBox_Output& output, uint32& P_32) {
+	for (int i = 0; i < 32; i++) {
 		WRITE_BIT_32(
-				31-i,
-				P_32,
-				READ_BIT((31-( permutation[i]-1)),output.value_32)
+			31 - i,
+			P_32,
+			READ_BIT((31 - (permutation[i] - 1)), output.value_32)
 		);
 	}
 
 }
 
-void xorLeftPerm(uint32 &P_32, const DES_Data &permPlainText, uint32 &output)
+void xorLeftPerm(uint32& P_32, const DES_Data& permPlainText, uint32& output)
 {
-	output =  (P_32)^(permPlainText.values_32.upper);
+	output = (P_32) ^ (permPlainText.values_32.upper);
 }
 
 
 void sbox(DES_SBox_Input& input, DES_SBox_Output& output) {
 
-	// a bit mask to extract the center and side bits 
+	// a bit mask to extract the center and side bits
 	int middle_4_bit_mask = 0b011110;
 
-	// since the output of the bit mask will be 6 bits for just the side bits 
-	// 0b100001 => 0b11 
+	// since the output of the bit mask will be 6 bits for just the side bits
+	// 0b100001 => 0b11
 
 	int col_i, row_i;
 	// Box 0
@@ -438,7 +446,7 @@ void sbox(DES_SBox_Input& input, DES_SBox_Output& output) {
 }
 
 
-void dataHandleRound(const DES_Data &permPlainText, DES_KeyType &roundKey, DES_Data &res) {
+void dataHandleRound(const DES_Data& permPlainText, DES_KeyType& roundKey, DES_Data& res) {
 
 	// for final perm
 	//DES_Data finalPermInput;
@@ -482,7 +490,7 @@ void KEY_PC1(DES_KeyType& key)
 	uint8 value = 0;
 	uint56 key56;
 	key56.value = (uint64)0;
-	uint8 PC_1[SIZE] = {  57, 49, 41, 33, 25, 17, 9,      \
+	uint8 PC_1[SIZE] = { 57, 49, 41, 33, 25, 17, 9,      \
 			1, 58, 50, 42, 34, 26, 18,  \
 			10, 2, 59, 51, 43, 35, 27,  \
 			19, 11, 3, 60, 52, 44, 36,  \
@@ -491,10 +499,10 @@ void KEY_PC1(DES_KeyType& key)
 			14, 6, 61, 53, 45, 37, 29,  \
 			21, 13, 5, 28, 20, 12, 4
 	};
-	for (uint8 i = 0 ; i < 56; i++)
+	for (uint8 i = 0; i < 56; i++)
 	{
 		value = READ_BIT2(key.value_64, 64 - PC_1[i]);
-		WRITE_BIT_56( 55 - i,&key56, value);
+		WRITE_BIT_56(55 - i, &key56, value);
 	}
 	key.value_56.value = key56.value;
 }
@@ -530,7 +538,7 @@ uint56 KEY_leftcircularshift(uint56 keyvalue, uint8 round)
 /*Description:
  * Generates all input keys to their respective rounds and stores
  * their values inside the global array InputKeys[]*/
-void generateKeys(DES_KeyType &key){
+void generateKeys(DES_KeyType& key) {
 
 	DES_KeyType first_key = key;
 
@@ -539,17 +547,17 @@ void generateKeys(DES_KeyType &key){
 	KEY_PC1(first_key);
 
 	/*Step 2 : Circular Shift Left + Permutation Choice 2*/
-	for(int i = 1 ; i <= 16 ; i++){
+	for (int i = 1; i <= 16; i++) {
 
-		DES_KeyType nextKey , roundKey;
+		DES_KeyType nextKey, roundKey;
 
-		nextKey.value_64 = 0 ;
-		roundKey.value_64 = 0 ;
+		nextKey.value_64 = 0;
+		roundKey.value_64 = 0;
 
 		nextKey.value_56 = KEY_leftcircularshift(first_key.value_56, i);
-		roundKey.value_48 =KEY_permutedchoice2(nextKey.value_56);
+		roundKey.value_48 = KEY_permutedchoice2(nextKey.value_56);
 
-		InputKeys[i-1] = roundKey;
+		InputKeys[i - 1] = roundKey;
 
 		first_key = nextKey;
 
@@ -561,36 +569,41 @@ void generateKeys(DES_KeyType &key){
 
 }
 
-char GetDecimal(char c)
+char GetDecimal(char c, string extension = "txt")
 {
-	/* 0 : 9 */
-	if ((c >= 48) && (c <= 57 )) return c-48;
-	/* A : F */
-	if ((c >= 65) && (c <= 70 )) return c-55;
-	/* a : f */
-	if ((c >= 97) && (c <= 102 )) return c-87;
+	//	if(extension != "txt"){
+	//		return c;
+	//	}
+		/* 0 : 9 */
+	//	if ((c >= 48) && (c <= 57 )) return c-48;
+	//	/* A : F */
+	//	if ((c >= 65) && (c <= 70 )) return c-55;
+	//	/* a : f */
+	//	if ((c >= 97) && (c <= 102 )) return c-87;
+
+	return c;
 }
 /*******************************************************************************
  *                        Encryption/Decryption Function                       *
  *******************************************************************************/
 
-/*Description:
- * Performs either DES encryption or decryption based on the passed operation type.
- * It encrypts the given plainText and key and produces the result in the same variable data*/
-void PerformOperation(DES_DataType & data,DES_KeyType &key , DES_OpType type){
+ /*Description:
+  * Performs either DES encryption or decryption based on the passed operation type.
+  * It encrypts the given plainText and key and produces the result in the same variable data*/
+void PerformOperation(DES_DataType& data, DES_KeyType& key, DES_OpType type) {
 
 	/*If input keys are not generated, generate them*/
-	if(!keyGenerated){
+	if (!keyGenerated) {
 		generateKeys(key);
 	}
 
-	DES_Data current = data.data  , temp ;
+	DES_Data current = data.data, temp;
 
-	temp.value_64 = 0 ;
+	temp.value_64 = 0;
 
 	//Step 1 : Initial Permutation for Data and Permutation Choice 1 to the key
 
-	initialPermutation(current,temp);
+	initialPermutation(current, temp);
 
 
 	//	cout<<"Data After Initial Permutation:";
@@ -599,17 +612,17 @@ void PerformOperation(DES_DataType & data,DES_KeyType &key , DES_OpType type){
 
 	//Step 2 : Perform Rounds
 
-	for(int i = 1 ; i <= 16 ; i++){
+	for (int i = 0; i < 16; i++) {
 
 		DES_Data output;
-		output.value_64 = 0 ;
+		output.value_64 = 0;
 
 		DES_KeyType roundKey;
-		if(type == ENCRYPT){
-			roundKey = InputKeys[i-1];
+		if (type == ENCRYPT) {
+			roundKey = InputKeys[i];
 		}
-		else{
-			roundKey = InputKeys[16-i];
+		else {
+			roundKey = InputKeys[15 - i];
 		}
 
 		dataHandleRound(temp, roundKey, output);
@@ -625,7 +638,7 @@ void PerformOperation(DES_DataType & data,DES_KeyType &key , DES_OpType type){
 
 	//Step 3 : 32 bit Swap
 
-	uint64 temporary = temp.values_32.lower ;
+	uint64 temporary = temp.values_32.lower;
 	temp.values_32.lower = temp.values_32.upper;
 	temp.values_32.upper = temporary;
 
@@ -644,79 +657,129 @@ void PerformOperation(DES_DataType & data,DES_KeyType &key , DES_OpType type){
 /*******************************************************************************
  *                               Main Function                                 *
  *******************************************************************************/
-int main(void){
+void print_arr(const uint8* arr, uint8 size)
+{
+	for (int i = 0; i < size; i++)
+	{
+		cout << hex << arr[i] << " ";
+	}
+	cout << endl;
+}
+int main(void) {
 
-	FILE *f ;
+	//int counter = 0 ;
+	FILE* f, * fout;
 
-	string DataPath = "C:\\Users\\DELL\\Desktop\\DES_SAMPLE\\Data.txt";
-	string KeyPath ="C:\\Users\\DELL\\Desktop\\DES_SAMPLE\\Key.txt";
-	string OutPath = "C:\\Users\\DELL\\Desktop\\DES_SAMPLE\\yakan.txt";
+	string DataPath = "./Encrypted.txt";
+	string KeyPath = "./Key.txt";
+	string OutPath = "./Decrypted.txt";
+	string ext = string(DataPath.end() - 3, DataPath.end());
+	//	cout<<ext<<endl<<endl;
+	f = fopen(DataPath.c_str(), "r");
+	fout = fopen(OutPath.c_str(), "w");
 
-	f=fopen(DataPath.c_str(),"rb");
-	ifstream KeyFile(KeyPath);
+	ifstream KeyFile(KeyPath), inFile(DataPath);
 	ofstream OutFile(OutPath);
 
+	//OutFile.rdbuf()->pubsetbuf(buffer, BUFFER_SIZE);
+
 	DES_KeyType key;
-
-
-	KeyFile>>hex>>key.value_64;
-
-	cout<<"Key is "<<hex<<uppercase<<key.value_64<<endl;
+	KeyFile >> hex >> key.value_64;
+	std::cout << "Key is 0x" << hex << uppercase << key.value_64 << endl;
 
 	DES_DataType plainText;
 	plainText.data.value_64 = 0;
 
-	char temp;
+	uint8 temp;
 
-	do{
+	while (!inFile.eof()) {
 
-		plainText.data.value_64 = 0 ;
-		bool flag = false;
+		plainText.data.value_64 = 0;
 
-		for(int i = 0 ; i < 8 ; i++){
+		for (int i = 7; i >= 0; i--) {
 
-			flag = false;
+			inFile >> noskipws >> plainText.array2[i];
+			//temp = fgetc(f);
+			//cout<<hex<<(int)temp<<" ";
 
-			temp = fgetc(f);
+			//			if(temp == ' '){
+			//				flag = true;
+			//				break;
+			//			}
+			//if (int(temp) == -1)
+			//	break;
 
-			if(temp == ' '){
-				flag = true;
-				break;
-			}
-			if(int(temp) == -1)
-				break;
+			//if (temp == -40)
+			//	continue;
+			//i++;
+			//			plainText.array[8-i-1].upper = GetDecimal(temp,ext);
+			//
+			//			temp = fgetc(f);
+			//
+			//			plainText.array[8-i-1 ].lower = GetDecimal(temp,ext);
 
-			plainText.array[8-i-1].upper = GetDecimal(temp);
-
-			temp = fgetc(f);
-
-			plainText.array[8-i-1 ].lower = GetDecimal(temp);
 
 		}
 
-		if(int(temp) == -1)
-			break;
-
-		if(flag != true){
-
-			PerformOperation(plainText, key, ENCRYPT);
-
-			cout<<"CipherText: "<<hex<<uppercase<<plainText.data.value_64<<endl;
-
-			for(int j = 7 ; j >= 0 ; j--){
+		//if (int(temp) == -1)
+		//	break;
 
 
-				OutFile<<hex<<uppercase<<(int)plainText.array[j].upper;
-				OutFile<<hex<<uppercase<<(int)plainText.array[j].lower;
+		//print_arr(plainText.array2, 8);
+		PerformOperation(plainText, key, DECRYPT);
+		//print_arr(plainText.array2, 8);
+		if (current_buffer_size < BUFFER_SIZE) {
 
-			}
+			buffer[current_buffer_size++] = plainText;
 
 		}
 
+		else {
+			//cout<<"CipherText: "<<hex<<uppercase<<plainText.data.value_64<<endl;
+			for (unsigned int i = 0; i < BUFFER_SIZE; i++) {
+				string res = "";
+				for (int j = 7; j >= 0; j--) {
+					//
+//						OutFile<<hex<<uppercase<<(int)buffer[i].array[j].upper;
+//						OutFile<<hex<<uppercase<<(int)buffer[i].array[j].lower;
+//
+//						fprintf(f,"%X",buffer[i].array[j].upper);
+//						fprintf(f,"%X",buffer[i].array[j].lower);
 
-	}while(int(temp) != -1);
+					//						fprintf(f)
 
-	cout<<"end";
+
+					OutFile << buffer[i].array2[j];
+					//						res = res + (char)buffer[i].array2[j];
+					//						OutFile<<dec<<buffer[i].array2[j];
+				}
+				//					fprintf(fout,"%s" , res.c_str());
+			}
+		}
+
+
+
+	}
+
+	for (unsigned int i = 0; i < current_buffer_size; i++) {
+		string res = "";
+		for (int j = 7; j >= 0; j--) {
+
+			//			OutFile<<hex<<uppercase<<(int)buffer[i].array[j].upper;
+			//			OutFile<<hex<<uppercase<<(int)buffer[i].array[j].lower;
+			//			cout<<"hena"<<endl;
+
+			//			fprintf(fout,"%X",buffer[i].array[j].upper);
+			//			fprintf(fout,"%X",buffer[i].array[j].lower);
+			//			res = res + (char)buffer[i].array2[j];
+			//fprintf(fout, "%c", buffer[i].array2[j]);
+			OutFile << buffer[i].array2[j];
+		}
+		//		fprintf(fout,"%s" , res.c_str());
+	}
+
+
+	cout << "end";
 
 	return 0;
 }
