@@ -784,7 +784,7 @@ int main(void) {
 
 		auto debug = plainText;
 
-		while (inFile) {
+		while (inFile.peek() != EOF) {
 
 			plainText.data.value_64 = 0;
 
